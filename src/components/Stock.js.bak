@@ -1,0 +1,169 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+import { Container, Typography, TextField, CircularProgress, Box, Grid } from '@mui/material';
+import { Autocomplete } from '@mui/material';
+import { Line } from 'react-chartjs-2'; // Import Line chart
+import 'chart.js/auto'; // Import Chart.js
+
+const StockData = () => {
+  const [symbol, setSymbol] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [stockInfo, setStockInfo] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
+  const [chartData, setChartData] = useState(null);
+
+  const fetchStockData = async (selectedSymbol) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:4000/stock/${selectedSymbol}`);
+      const data = response.data;
+  
+      console.log(data); // Log the response data to inspect its structure
+  
+      if (data.price) {
+        const chartLabels = [new Date(data.price.regularMarketTime).toLocaleString()];
+        const chartPrices = [data.price.regularMarketPrice];
+  
+        setChartData({
+          labels: chartLabels,
+          datasets: [
+            {
+              label: `${selectedSymbol} Stock Price`,
+              data: chartPrices,
+              fill: false,
+              backgroundColor: 'rgba(75, 192, 192, 0.6)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              tension: 0.1,
+            },
+          ],
+        });
+        setStockInfo(data);
+      } else {
+        throw new Error("Price data not available");
+      }
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+      alert('Error fetching stock data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSuggestions = async (inputValue) => {
+    if (!inputValue) {
+      setSuggestions([]); 
+      return;
+    }
+    setFetchingSuggestions(true);
+    try {
+      const response = await axios.get(`http://localhost:4000/suggestions/${inputValue}`);
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+    } finally {
+      setFetchingSuggestions(false);
+    }
+  };
+
+  const handleSymbolChange = (event, value) => {
+    if (value) {
+      setSymbol(value); 
+      fetchStockData(value);
+    }
+  };
+
+  return (
+    <Container>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Stock Market Data
+      </Typography>
+
+      <Autocomplete
+        freeSolo
+        options={suggestions}
+        getOptionLabel={(option) => option}
+        onInputChange={(e, newInputValue) => fetchSuggestions(newInputValue)}
+        onChange={handleSymbolChange}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Search Stock Symbol"
+            variant="outlined"
+            fullWidth
+            InputProps={{
+              ...params.InputProps,
+              endAdornment: (
+                <>
+                  {fetchingSuggestions ? <CircularProgress color="inherit" size={20} /> : null}
+                  {params.InputProps.endAdornment}
+                </>
+              ),
+            }}
+          />
+        )}
+      />
+
+      {loading ? (
+        <CircularProgress style={{ marginTop: '20px' }} />
+      ) : (
+        stockInfo && (
+          <div style={{ marginTop: '20px' }}>
+            {chartData && (
+              <div style={{ marginTop: '40px' }}>
+                <Typography variant="h6">Stock Price Chart:</Typography>
+                <Line data={chartData} />
+              </div>
+            )}
+
+            {stockInfo && (
+              <Box sx={{ marginTop: '20px' }}>
+                <Typography variant="h6">Stock Information:</Typography>
+
+                {/* Grid Layout for Small Info Boxes */}
+                <Grid container spacing={2} sx={{ marginTop: '20px' }}>
+                  <Grid item xs={6} md={4}>
+                    <Box sx={{ padding: 2, backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)', borderRadius: '8px' }}>
+                      <Typography variant="body1" color="textSecondary">Current Price</Typography>
+                      <Typography variant="h6">${stockInfo.price.regularMarketPrice}</Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={6} md={4}>
+                    <Box sx={{ padding: 2, backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)', borderRadius: '8px' }}>
+                      <Typography variant="body1" color="textSecondary">Open Price</Typography>
+                      <Typography variant="h6">${stockInfo.price.regularMarketOpen}</Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={6} md={4}>
+                    <Box sx={{ padding: 2, backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)', borderRadius: '8px'  }}>
+                      <Typography variant="body1" color="textSecondary">Day High</Typography>
+                      <Typography variant="h6">${stockInfo.price.regularMarketDayHigh}</Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={6} md={4}>
+                    <Box sx={{ padding: 2, backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)', borderRadius: '8px' }}>
+                      <Typography variant="body1" color="textSecondary">Day Low</Typography>
+                      <Typography variant="h6">${stockInfo.price.regularMarketDayLow}</Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={6} md={4}>
+                    <Box sx={{ padding: 2,backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)', borderRadius: '8px' }}>
+                      <Typography variant="body1" color="textSecondary">Market Cap</Typography>
+                      <Typography variant="h6">${stockInfo.price.marketCap}</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+          </div>
+        )
+      )}
+    </Container>
+  );
+};
+
+export default StockData;

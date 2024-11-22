@@ -75,4 +75,9 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 # main git repo
 https://github.com/OneKnow654/Stocklytics.git
+<<<<<<< HEAD
 >>>>>>> d1e71a8 (nothing change just add the main github site link into repo')
+=======
+
+### this is just demo 
+>>>>>>> 9789288 (just checkin)

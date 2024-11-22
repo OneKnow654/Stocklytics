@@ -7,8 +7,10 @@ const StockPredictionForm = () => {
     const [endDate, setEndDate] = useState('');
     const [timeframe, setTimeframe] = useState('');
     const [riskPercentage, setRiskPercentage] = useState('');
+    const [predictionResult, setPredictionResult] = useState(null);
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const predictionData = {
@@ -18,9 +20,27 @@ const StockPredictionForm = () => {
             timeframe,
             risk_percentage: parseFloat(riskPercentage),
         };
+        console.log(predictionData)
+        try {
+            const response = await fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(predictionData),
+            });
 
-        console.log('Prediction Data:', predictionData);
-        // Send data to the backend
+            if (!response.ok) {
+                throw new Error('Failed to fetch prediction data');
+            }
+
+            const data = await response.json();
+            setPredictionResult(data);
+            setError(''); // Clear any previous error
+        } catch (err) {
+            console.error('Error fetching prediction:', err);
+            setError('An error occurred while fetching prediction data.');
+        }
     };
 
     return (

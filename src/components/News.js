@@ -8,7 +8,7 @@ const News = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`https://newsapi.org/v2/everything?q=stocks&apiKey=${API_KEY}`)
+    fetch(`https://newsapi.org/v2/everything?q=stocks+india&apiKey=${API_KEY}`)
       .then((response) => response.json())
       .then((data) => {
         setArticles(data.articles);

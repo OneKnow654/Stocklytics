@@ -7,10 +7,8 @@ const StockPredictionForm = () => {
     const [endDate, setEndDate] = useState('');
     const [timeframe, setTimeframe] = useState('');
     const [riskPercentage, setRiskPercentage] = useState('');
-    const [predictionResult, setPredictionResult] = useState(null);
-    const [error, setError] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
 
         const predictionData = {
@@ -20,89 +18,60 @@ const StockPredictionForm = () => {
             timeframe,
             risk_percentage: parseFloat(riskPercentage),
         };
-        console.log(predictionData)
-        try {
-            const response = await fetch('http://localhost:5000/predict', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(predictionData),
-            });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch prediction data');
-            }
-
-            const data = await response.json();
-            setPredictionResult(data);
-            setError(''); // Clear any previous error
-        } catch (err) {
-            console.error('Error fetching prediction:', err);
-            setError('An error occurred while fetching prediction data.');
-        }
+        console.log('Prediction Data:', predictionData);
+        // Send data to the backend
     };
 
     return (
-        <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '0 auto' }}>
             <h2>Stock Prediction Form</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Ticker:</label>
-                    <StockSuggestions onSelect={setTicker} />
-                </div>
-                <div>
-                    <label>Start Date:</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>End Date:</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Timeframe:</label>
-                    <select
-                        value={timeframe}
-                        onChange={(e) => setTimeframe(e.target.value)}
-                        required
-                    >
-                        <option value="">Select</option>
-                        <option value="short-term">Short-Term</option>
-                        <option value="long-term">Long-Term</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Risk Percentage:</label>
-                    <input
-                        type="number"
-                        value={riskPercentage}
-                        onChange={(e) => setRiskPercentage(e.target.value)}
-                        step="0.01"
-                        required
-                    />
-                </div>
-                <button type="submit">Submit</button>
-            </form>
-
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-
-            {predictionResult && (
-                <div>
-                    <h3>Prediction Result</h3>
-                    <pre>{JSON.stringify(predictionResult, null, 2)}</pre>
-                </div>
-            )}
-        </div>
+            <div>
+                <label>Ticker:</label>
+                <StockSuggestions onSelect={setTicker} />
+            </div>
+            <div>
+                <label>Start Date:</label>
+                <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                />
+            </div>
+            <div>
+                <label>End Date:</label>
+                <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                />
+            </div>
+            <div>
+                <label>Timeframe:</label>
+                <select
+                    value={timeframe}
+                    onChange={(e) => setTimeframe(e.target.value)}
+                    required
+                >
+                    <option value="">Select</option>
+                    <option value="short-term">Short-Term</option>
+                    <option value="long-term">Long-Term</option>
+                </select>
+            </div>
+            <div>
+                <label>Risk Percentage:</label>
+                <input
+                    type="number"
+                    value={riskPercentage}
+                    onChange={(e) => setRiskPercentage(e.target.value)}
+                    step="0.01"
+                    required
+                />
+            </div>
+            <button type="submit">Submit</button>
+        </form>
     );
 };
 

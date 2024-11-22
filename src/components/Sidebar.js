@@ -49,7 +49,7 @@ const Sidebar = ({ open, toggleSidebar, username }) => {
           <ListItemText primary="Contact Us" sx={{ color: '#fff' }} />
         </ListItem>
         <ListItem button component={Link} to="predict">
-          <ListItemText primary="StockPredictionForm" sx={{ color: '#fff' }} />
+          <ListItemText primary="stock predict" sx={{ color: '#fff' }} />
         </ListItem>
         <ListItem button component={Link} to="logout">
           <ListItemText primary="Logout" sx={{ color: '#fff' }} />

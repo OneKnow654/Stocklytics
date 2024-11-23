@@ -8,6 +8,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Sidebar from './Sidebar';
 import News from './News';
 import Profile from './Profile';
+import StockPredictionForm from './predict'; // Import the StockPredictionForm component
 
 // Logout Component
 const Logout = () => {
@@ -96,7 +97,7 @@ const Dashboard = () => {
 
       {/* Content Area */}
       <Container sx={{ marginLeft: '200px', padding: '20px', transition: 'margin-left 0.3s ease', marginLeft: sidebarOpen ? '200px' : '0' }}>
-        {/* Home Page - Stock Terms Boxes */}
+        {/* Routes */}
         <Routes>
           <Route path="/" element={
             <>
@@ -111,6 +112,7 @@ const Dashboard = () => {
           <Route path="contact" element={<ContactUs />} />
           <Route path="logout" element={<Logout />} />
           <Route path="news" element={<News />} />
+          <Route path="predict" element={<StockPredictionForm />} /> {/* Add Prediction Form Route */}
         </Routes>
       </Container>
     </Box>
@@ -118,3 +120,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

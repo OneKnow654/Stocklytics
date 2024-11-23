@@ -8,7 +8,7 @@ const News = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`https://newsapi.org/v2/everything?q=stocks&apiKey=${API_KEY}`)
+    fetch(`https://newsapi.org/v2/everything?q=stocks+India&apiKey=${API_KEY}&language=en&sortBy=publishedAt`)
       .then((response) => response.json())
       .then((data) => {
         setArticles(data.articles);
@@ -31,7 +31,7 @@ const News = () => {
   return (
     <Container sx={{ padding: '20px' }}>
       <Typography variant="h4" gutterBottom>
-        Latest Stock News
+        Latest Indian Stock News
       </Typography>
       {articles.map((article, index) => (
         <Card key={index} sx={{ display: 'flex', marginBottom: '20px' }}>

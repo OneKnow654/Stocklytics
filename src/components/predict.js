@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TextField, Button, MenuItem, Box, Typography, Grid } from '@mui/material';
 import StockSuggestions from './StockSuggestions';
 
 const StockPredictionForm = () => {
@@ -24,54 +25,84 @@ const StockPredictionForm = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '0 auto' }}>
-            <h2>Stock Prediction Form</h2>
-            <div>
-                <label>Ticker:</label>
-                <StockSuggestions onSelect={setTicker} />
-            </div>
-            <div>
-                <label>Start Date:</label>
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                />
-            </div>
-            <div>
-                <label>End Date:</label>
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required
-                />
-            </div>
-            <div>
-                <label>Timeframe:</label>
-                <select
-                    value={timeframe}
-                    onChange={(e) => setTimeframe(e.target.value)}
-                    required
-                >
-                    <option value="">Select</option>
-                    <option value="short-term">Short-Term</option>
-                    <option value="long-term">Long-Term</option>
-                </select>
-            </div>
-            <div>
-                <label>Risk Percentage:</label>
-                <input
-                    type="number"
-                    value={riskPercentage}
-                    onChange={(e) => setRiskPercentage(e.target.value)}
-                    step="0.01"
-                    required
-                />
-            </div>
-            <button type="submit">Submit</button>
-        </form>
+        <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+                maxWidth: 500,
+                margin: '0 auto',
+                p: 3,
+                borderRadius: 2,
+                boxShadow: 3,
+                backgroundColor: 'white',
+            }}
+        >
+            <Typography variant="h5" component="h2" gutterBottom>
+                Stock Prediction Form
+            </Typography>
+
+            <Grid container spacing={2}>
+                <Grid item xs={12}>
+                    <StockSuggestions onSelect={setTicker} />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label="Start Date"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        required
+                    />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label="End Date"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        required
+                    />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        select
+                        label="Timeframe"
+                        value={timeframe}
+                        onChange={(e) => setTimeframe(e.target.value)}
+                        required
+                    >
+                        <MenuItem value="short-term">Short-Term</MenuItem>
+                        <MenuItem value="long-term">Long-Term</MenuItem>
+                    </TextField>
+                </Grid>
+
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label="Risk Percentage"
+                        type="number"
+                        value={riskPercentage}
+                        onChange={(e) => setRiskPercentage(e.target.value)}
+                        InputProps={{ inputProps: { step: 0.01 } }}
+                        required
+                    />
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Button variant="contained" color="primary" type="submit" fullWidth>
+                        Submit
+                    </Button>
+                </Grid>
+            </Grid>
+        </Box>
     );
 };
 

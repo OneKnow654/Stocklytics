@@ -23,9 +23,9 @@ const StockSuggestions = ({ onSelect }) => {
     };
 
     const handleSelect = (ticker) => {
-        onSelect(ticker);
-        setInput('');
-        setSuggestions([]);
+        onSelect(ticker); // Notify parent about the selected ticker
+        setInput(ticker); // Update the input box with the selected ticker
+        setSuggestions([]); // Clear the suggestions dropdown
     };
 
     return (

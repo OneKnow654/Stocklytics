@@ -1,26 +1,59 @@
 import React, { useState } from 'react';
+import { Box, Button, Card, CardContent, Typography, Grid, TextField, Tooltip } from '@mui/material';
 import StockSuggestions from './StockSuggestions';
 
 const StockPredictionForm = () => {
     const [ticker, setTicker] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [timeframe, setTimeframe] = useState('');
     const [riskPercentage, setRiskPercentage] = useState('');
+    const [selectedTerm, setSelectedTerm] = useState(null);
     const [predictionResult, setPredictionResult] = useState(null);
     const [error, setError] = useState('');
+
+    const calculateDates = (term) => {
+        const currentDate = new Date();
+        let startDate, endDate;
+
+        if (term === 'short-term') {
+            startDate = new Date(currentDate.setMonth(currentDate.getMonth() - 7));
+            endDate = new Date();
+        } else if (term === 'mid-term') {
+            startDate = new Date(currentDate.setMonth(currentDate.getMonth() - 12));
+            endDate = new Date();
+        } else if (term === 'long-term') {
+            startDate = new Date(currentDate.setMonth(currentDate.getMonth() - 24));
+            endDate = new Date();
+        }
+
+        return {
+            start: startDate.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+            end: endDate.toISOString().split('T')[0],
+        };
+    };
+
+    const handleTermSelection = (term) => {
+        setSelectedTerm(term);
+        const { start, end } = calculateDates(term);
+        console.log(`Selected Term: ${term}`, `Start Date: ${start}`, `End Date: ${end}`);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (!selectedTerm) {
+            setError('Please select a term before submitting.');
+            return;
+        }
+
+        const { start, end } = calculateDates(selectedTerm);
+
         const predictionData = {
             ticker,
-            start: startDate,
-            end: endDate,
-            timeframe,
+            start,
+            end,
+            timeframe: selectedTerm,
             risk_percentage: parseFloat(riskPercentage),
         };
-        console.log(predictionData)
+
         try {
             const response = await fetch('http://localhost:5000/predict', {
                 method: 'POST',
@@ -44,54 +77,119 @@ const StockPredictionForm = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '0 auto' }}>
-            <h2>Stock Prediction Form</h2>
-            <div>
-                <label>Ticker:</label>
-                <StockSuggestions onSelect={setTicker} />
-            </div>
-            <div>
-                <label>Start Date:</label>
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                />
-            </div>
-            <div>
-                <label>End Date:</label>
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required
-                />
-            </div>
-            <div>
-                <label>Timeframe:</label>
-                <select
-                    value={timeframe}
-                    onChange={(e) => setTimeframe(e.target.value)}
-                    required
-                >
-                    <option value="">Select</option>
-                    <option value="short-term">Short-Term</option>
-                    <option value="long-term">Long-Term</option>
-                </select>
-            </div>
-            <div>
-                <label>Risk Percentage:</label>
-                <input
-                    type="number"
-                    value={riskPercentage}
-                    onChange={(e) => setRiskPercentage(e.target.value)}
-                    step="0.01"
-                    required
-                />
-            </div>
-            <button type="submit">Submit</button>
-        </form>
+        <Box sx={{ maxWidth: 600, mx: 'auto', mt: 5, p: 3, boxShadow: 3, borderRadius: 2, bgcolor: 'background.paper' }}>
+            <Typography variant="h5" gutterBottom>
+                Stock Prediction Form
+            </Typography>
+            <form onSubmit={handleSubmit}>
+                <Box sx={{ mb: 3 }}>
+                    <StockSuggestions onSelect={setTicker} />
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        Select Timeframe:
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {[
+                            {
+                                term: 'short-term',
+                                title: 'Short Term',
+                                description: 'Focuses on the last 7 months of data.',
+                            },
+                            {
+                                term: 'mid-term',
+                                title: 'Mid Term',
+                                description: 'Covers data from the last 12 months.',
+                            },
+                            {
+                                term: 'long-term',
+                                title: 'Long Term',
+                                description: 'Analyzes the last 24 months of data.',
+                            },
+                        ].map(({ term, title, description }) => (
+                            <Grid item xs={4} key={term}>
+                                <Tooltip title={description} arrow>
+                                    <Card
+                                        onClick={() => handleTermSelection(term)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            border:
+                                                selectedTerm === term ? '2px solid #1976d2' : '1px solid #ccc',
+                                        }}
+                                    >
+                                        <CardContent>
+                                            <Typography variant="h6" align="center">
+                                                {title}
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Tooltip>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                    <TextField
+                        label="Risk Percentage"
+                        type="number"
+                        value={riskPercentage}
+                        onChange={(e) => setRiskPercentage(e.target.value)}
+                        fullWidth
+                        inputProps={{ step: 0.01 }}
+                        required
+                    />
+                </Box>
+                <Button type="submit" variant="contained" color="primary" fullWidth>
+                    Submit
+                </Button>
+            </form>
+
+            {error && (
+                <Typography variant="body1" color="error" sx={{ mt: 2 }}>
+                    {error}
+                </Typography>
+            )}
+
+            {predictionResult && (
+                <Card sx={{ mt: 4, boxShadow: 3 }}>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                            Prediction Results
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {[
+                                {
+                                    label: 'Predicted Closing Price',
+                                    value: predictionResult.predicted_closing_price,
+                                },
+                                {
+                                    label: 'Threshold Price',
+                                    value: predictionResult.threshold_price,
+                                },
+                                {
+                                    label: 'Mean Absolute Error',
+                                    value: predictionResult.mean_absolute_error,
+                                },
+                                {
+                                    label: 'Mean Absolute Percentage Error',
+                                    value: predictionResult.mean_absolute_percentage_error,
+                                },
+                                {
+                                    label: 'Mean Squared Error',
+                                    value: predictionResult.mean_squared_error,
+                                },
+                            ].map(({ label, value }) => (
+                                <Grid item xs={12} key={label}>
+                                    <Typography variant="body1">
+                                        <strong>{label}:</strong> {value}
+                                    </Typography>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </CardContent>
+                </Card>
+            )}
+        </Box>
     );
 };
 

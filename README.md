@@ -1,5 +1,8 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 70cdc1758dc4186a36d096112d7b9db14ea81b9b
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -70,6 +73,7 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+<<<<<<< HEAD
 
 
 
@@ -81,3 +85,5 @@ https://github.com/OneKnow654/Stocklytics.git
 
 ### this is just demo 
 >>>>>>> 9789288 (just checkin)
+=======
+>>>>>>> 70cdc1758dc4186a36d096112d7b9db14ea81b9b

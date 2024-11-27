@@ -8,6 +8,7 @@ const News = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+
     fetch(`https://newsapi.org/v2/everything?q=stocks+India&apiKey=${API_KEY}&language=en&sortBy=publishedAt`)
       .then((response) => response.json())
       .then((data) => {

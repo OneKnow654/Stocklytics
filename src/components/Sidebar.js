@@ -30,6 +30,9 @@ const Sidebar = ({ open, toggleSidebar, username }) => {
       </Card>
 
       <List component="nav">
+      <ListItem button component={Link} to="/">
+          <ListItemText primary="Dashboard" sx={{ color: '#fff' }} />
+        </ListItem>
         <ListItem button component={Link} to="profile">
           <ListItemText primary="Profile" sx={{ color: '#fff' }} />
         </ListItem>
@@ -44,6 +47,9 @@ const Sidebar = ({ open, toggleSidebar, username }) => {
         </ListItem>
         <ListItem button component={Link} to="contact">
           <ListItemText primary="Contact Us" sx={{ color: '#fff' }} />
+        </ListItem>
+        <ListItem button component={Link} to="predict">
+          <ListItemText primary="stock predict" sx={{ color: '#fff' }} />
         </ListItem>
         <ListItem button component={Link} to="logout">
           <ListItemText primary="Logout" sx={{ color: '#fff' }} />

@@ -191,6 +191,26 @@ const StockPredictionForm = () => {
                                 }}
                             >
                                 <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                    Threshold percentage:
+                                </Typography>
+                                <Typography variant="body1" color="primary">
+                                    {predictionResult.risk_percentage}%
+                                    
+                                </Typography>
+                            </Box>
+
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: 2,
+                                    border: '1px solid #ccc',
+                                    borderRadius: 2,
+                                    bgcolor: 'background.default',
+                                }}
+                            >
+                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                                     Mean Absolute Error:
                                 </Typography>
                                 <Typography variant="body1" color="secondary">

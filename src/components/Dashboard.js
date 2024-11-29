@@ -88,7 +88,7 @@ const Dashboard = () => {
   return (
     <Box sx={{ display: 'flex' }}>
       {/* Toggle Button */}
-      <IconButton onClick={toggleSidebar} sx={{ position: 'absolute', left: '10px', top: '10px', zIndex: '10' }}>
+      <IconButton onClick={toggleSidebar} sx={{ position: 'absolute', left: '10px', top: '70px', zIndex: '10' }}>
         <MenuIcon sx={{ color: '#333' }} />
       </IconButton>
 

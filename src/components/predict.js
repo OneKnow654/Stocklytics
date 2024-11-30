@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Box, Button, Card, CardContent, Typography, Grid, TextField, Tooltip } from '@mui/material';
+import { Box, Button, Card, CardContent, Typography, Grid, Tooltip } from '@mui/material';
 import StockSuggestions from './StockSuggestions';
 
 const StockPredictionForm = () => {
     const [ticker, setTicker] = useState('');
-    const [riskPercentage, setRiskPercentage] = useState('');
     const [selectedTerm, setSelectedTerm] = useState(null);
     const [predictionResult, setPredictionResult] = useState(null);
     const [error, setError] = useState('');
@@ -25,7 +24,7 @@ const StockPredictionForm = () => {
         }
 
         return {
-            start: startDate.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+            start: startDate.toISOString().split('T')[0],
             end: endDate.toISOString().split('T')[0],
         };
     };
@@ -51,7 +50,6 @@ const StockPredictionForm = () => {
             start,
             end,
             timeframe: selectedTerm,
-            risk_percentage: parseFloat(riskPercentage),
         };
 
         try {
@@ -90,31 +88,28 @@ const StockPredictionForm = () => {
                         Select Timeframe:
                     </Typography>
                     <Grid container spacing={2}>
-                        {[
-                            {
-                                term: 'short-term',
-                                title: 'Short Term',
-                                description: 'Focuses on the last 7 months of data.',
-                            },
-                            {
-                                term: 'mid-term',
-                                title: 'Mid Term',
-                                description: 'Covers data from the last 12 months.',
-                            },
-                            {
-                                term: 'long-term',
-                                title: 'Long Term',
-                                description: 'Analyzes the last 24 months of data.',
-                            },
-                        ].map(({ term, title, description }) => (
+                        {[{
+                            term: 'short-term',
+                            title: 'Short Term',
+                            description: 'The short-term timeframe focuses on the last 7 months of data, ideal for identifying quick trends and short-lived price movements. It is suitable for traders seeking immediate returns but comes with higher risks due to market volatility and the need for frequent monitoring.',
+                        },
+                        {
+                            term: 'mid-term',
+                            title: 'Mid Term',
+                            description: 'The mid-term timeframe analyzes the past 12 months of data, offering a balance between risk and return. It’s perfect for investors targeting quarterly or half-yearly trends, such as seasonal patterns or industry growth, with moderate volatility.',
+                        },
+                        {
+                            term: 'long-term',
+                            title: 'Long Term',
+                            description: 'The long-term timeframe examines data from the last 24 months, focusing on consistent growth trends and company fundamentals. It’s ideal for investors seeking stability and steady returns, with less sensitivity to daily market fluctuations.',
+                        }].map(({ term, title, description }) => (
                             <Grid item xs={4} key={term}>
                                 <Tooltip title={description} arrow>
                                     <Card
                                         onClick={() => handleTermSelection(term)}
                                         sx={{
                                             cursor: 'pointer',
-                                            border:
-                                                selectedTerm === term ? '2px solid #1976d2' : '1px solid #ccc',
+                                            border: selectedTerm === term ? '2px solid #1976d2' : '1px solid #ccc',
                                         }}
                                     >
                                         <CardContent>
@@ -127,17 +122,6 @@ const StockPredictionForm = () => {
                             </Grid>
                         ))}
                     </Grid>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                    <TextField
-                        label="Risk Percentage"
-                        type="number"
-                        value={riskPercentage}
-                        onChange={(e) => setRiskPercentage(e.target.value)}
-                        fullWidth
-                        inputProps={{ step: 0.01 }}
-                        required
-                    />
                 </Box>
                 <Button type="submit" variant="contained" color="primary" fullWidth>
                     Submit
@@ -156,36 +140,87 @@ const StockPredictionForm = () => {
                         <Typography variant="h6" gutterBottom>
                             Prediction Results
                         </Typography>
-                        <Grid container spacing={2}>
-                            {[
-                                {
-                                    label: 'Predicted Closing Price',
-                                    value: predictionResult.predicted_closing_price,
-                                },
-                                {
-                                    label: 'Threshold Price',
-                                    value: predictionResult.threshold_price,
-                                },
-                                {
-                                    label: 'Mean Absolute Error',
-                                    value: predictionResult.mean_absolute_error,
-                                },
-                                {
-                                    label: 'Mean Absolute Percentage Error',
-                                    value: predictionResult.mean_absolute_percentage_error,
-                                },
-                                {
-                                    label: 'Mean Squared Error',
-                                    value: predictionResult.mean_squared_error,
-                                },
-                            ].map(({ label, value }) => (
-                                <Grid item xs={12} key={label}>
-                                    <Typography variant="body1">
-                                        <strong>{label}:</strong> {value}
-                                    </Typography>
-                                </Grid>
-                            ))}
-                        </Grid>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: 2,
+                                    border: '1px solid #ccc',
+                                    borderRadius: 2,
+                                    bgcolor: 'background.default',
+                                }}
+                            >
+                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                    Predicted Closing Price:
+                                </Typography>
+                                <Typography variant="body1" color="primary">
+                                    ₹{predictionResult.predicted_closing_price}
+                                </Typography>
+                            </Box>
+
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: 2,
+                                    border: '1px solid #ccc',
+                                    borderRadius: 2,
+                                    bgcolor: 'background.default',
+                                }}
+                            >
+                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                    Threshold Price:
+                                </Typography>
+                                <Typography variant="body1" color="primary">
+                                    ₹{predictionResult.threshold_price}
+                                </Typography>
+                            </Box>
+
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: 2,
+                                    border: '1px solid #ccc',
+                                    borderRadius: 2,
+                                    bgcolor: 'background.default',
+                                }}
+                            >
+                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                    Mean Absolute Error:
+                                </Typography>
+                                <Typography variant="body1" color="secondary">
+                                    ₹{predictionResult.mean_absolute_error}
+                                </Typography>
+                            </Box>
+
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: 2,
+                                    border: '1px solid #ccc',
+                                    borderRadius: 2,
+                                    bgcolor: 'background.default',
+                                }}
+                            >
+                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                    Predicted Closing Price + Mean Absolute Error:
+                                </Typography>
+                                <Typography variant="body1" color="primary">
+                                ₹
+                                    {(
+                                        parseFloat(predictionResult.predicted_closing_price) +
+                                        parseFloat(predictionResult.mean_absolute_error)
+                                    ).toFixed(2)}
+                                </Typography>
+                            </Box>
+                        </Box>
                     </CardContent>
                 </Card>
             )}

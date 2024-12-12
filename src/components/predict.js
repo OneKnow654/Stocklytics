@@ -134,116 +134,106 @@ const StockPredictionForm = () => {
                 </Typography>
             )}
 
-            {predictionResult && (
-                <Card sx={{ mt: 4, boxShadow: 3 }}>
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                            Prediction Results
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    padding: 2,
-                                    border: '1px solid #ccc',
-                                    borderRadius: 2,
-                                    bgcolor: 'background.default',
-                                }}
-                            >
-                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                                    Predicted Closing Price:
-                                </Typography>
-                                <Typography variant="body1" color="primary">
-                                    ₹{predictionResult.predicted_closing_price}
-                                </Typography>
-                            </Box>
+{predictionResult && (
+  <Card sx={{ mt: 4, p: 3, boxShadow: 3, borderRadius: 2, bgcolor: 'background.paper' }}>
+    <Typography variant="h5" gutterBottom align="center" sx={{ mb: 3 }}>
+      📊 Stock Prediction Results
+    </Typography>
+    <Grid container spacing={3}>
+      {/* Predicted Closing Price */}
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 2, textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Predicted Closing Price
+          </Typography>
+          <Typography variant="body1" color="primary" sx={{ fontSize: 24, fontWeight: 'bold' }}>
+            ₹{predictionResult.predicted_closing_price}
+          </Typography>
+          <Typography variant="caption" color="textSecondary">
+            This is the estimated stock price based on historical data and trends.
+          </Typography>
+        </Box>
+      </Grid>
 
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    padding: 2,
-                                    border: '1px solid #ccc',
-                                    borderRadius: 2,
-                                    bgcolor: 'background.default',
-                                }}
-                            >
-                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                                    Threshold Price:
-                                </Typography>
-                                <Typography variant="body1" color="primary">
-                                    ₹{predictionResult.threshold_price}
-                                </Typography>
-                            </Box>
+      {/* Threshold Price */}
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 2, textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Threshold Price
+          </Typography>
+          <Typography variant="body1" color="secondary" sx={{ fontSize: 24, fontWeight: 'bold' }}>
+            ₹{predictionResult.threshold_price}
+          </Typography>
+          <Typography variant="caption" color="textSecondary">
+            If the stock falls below this price, it may signal a high-risk zone.
+          </Typography>
+        </Box>
+      </Grid>
 
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    padding: 2,
-                                    border: '1px solid #ccc',
-                                    borderRadius: 2,
-                                    bgcolor: 'background.default',
-                                }}
-                            >
-                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                                    Threshold percentage:
-                                </Typography>
-                                <Typography variant="body1" color="primary">
-                                    {predictionResult.risk_percentage}%
-                                    
-                                </Typography>
-                            </Box>
+      {/* Risk Percentage */}
+      <Grid item xs={12}>
+        <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Risk Percentage
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body1" color={predictionResult.risk_percentage < 50 ? 'success.main' : 'error.main'} sx={{ fontSize: 24, fontWeight: 'bold' }}>
+              {predictionResult.risk_percentage}%
+            </Typography>
+            <Box sx={{ width: '100%' }}>
+              <Box
+                sx={{
+                  width: `${predictionResult.risk_percentage}%`,
+                  height: 10,
+                  bgcolor: predictionResult.risk_percentage < 50 ? 'success.main' : 'error.main',
+                  borderRadius: 5,
+                }}
+              />
+            </Box>
+          </Box>
+          <Typography variant="caption" color="textSecondary">
+            This indicates the potential risk level for this stock.
+          </Typography>
+        </Box>
+      </Grid>
 
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    padding: 2,
-                                    border: '1px solid #ccc',
-                                    borderRadius: 2,
-                                    bgcolor: 'background.default',
-                                }}
-                            >
-                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                                    Mean Absolute Error:
-                                </Typography>
-                                <Typography variant="body1" color="secondary">
-                                    ₹{predictionResult.mean_absolute_error}
-                                </Typography>
-                            </Box>
+      {/* Mean Absolute Error */}
+      <Grid item xs={12}>
+        <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 2, textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Mean Absolute Error (MAE)
+          </Typography>
+          <Typography variant="body1" color="warning.main" sx={{ fontSize: 24, fontWeight: 'bold' }}>
+            ₹{predictionResult.mean_absolute_error}
+          </Typography>
+          <Typography variant="caption" color="textSecondary">
+            The average difference between predicted and actual prices. A lower value indicates higher accuracy.
+          </Typography>
+        </Box>
+      </Grid>
 
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    padding: 2,
-                                    border: '1px solid #ccc',
-                                    borderRadius: 2,
-                                    bgcolor: 'background.default',
-                                }}
-                            >
-                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                                    Predicted Closing Price + Mean Absolute Error:
-                                </Typography>
-                                <Typography variant="body1" color="primary">
-                                ₹
-                                    {(
-                                        parseFloat(predictionResult.predicted_closing_price) +
-                                        parseFloat(predictionResult.mean_absolute_error)
-                                    ).toFixed(2)}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </CardContent>
-                </Card>
-            )}
+      {/* Predicted Closing Price + MAE */}
+      <Grid item xs={12}>
+        <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 2, textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Predicted Closing Price + MAE
+          </Typography>
+          <Typography variant="body1" color="primary" sx={{ fontSize: 24, fontWeight: 'bold' }}>
+            ₹{(
+              parseFloat(predictionResult.predicted_closing_price) +
+              parseFloat(predictionResult.mean_absolute_error)
+            ).toFixed(2)}
+          </Typography>
+          <Typography variant="caption" color="textSecondary">
+            The maximum estimated price, considering prediction error.
+          </Typography>
+        </Box>
+      </Grid>
+    </Grid>
+  </Card>
+)}
+
+
         </Box>
     );
 };

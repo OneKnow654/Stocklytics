@@ -170,29 +170,60 @@ const StockPredictionForm = () => {
         </Box>
       </Grid>
 
-      {/* Risk Percentage */}
+      {/* Risk Percentage with Speedometer */}
       <Grid item xs={12}>
-        <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Risk Percentage
+        <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 4, textAlign: 'center', position: 'relative' }}>
+          <Typography variant="h6" sx={{ mb: 3 }}>
+            Risk Level
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body1" color={predictionResult.risk_percentage < 50 ? 'success.main' : 'error.main'} sx={{ fontSize: 24, fontWeight: 'bold' }}>
-              {predictionResult.risk_percentage}%
-            </Typography>
-            <Box sx={{ width: '100%' }}>
-              <Box
-                sx={{
-                  width: `${predictionResult.risk_percentage}%`,
-                  height: 10,
-                  bgcolor: predictionResult.risk_percentage < 50 ? 'success.main' : 'error.main',
-                  borderRadius: 5,
-                }}
+          <Box sx={{ position: 'relative', width: 200, height: 100, mx: 'auto' }}>
+            <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+              {/* Gauge Arc */}
+              <path
+                d="M 10 90 A 90 90 0 0 1 190 90"
+                fill="none"
+                stroke="#ddd"
+                strokeWidth="10"
               />
-            </Box>
+              {/* Risk Level Arc */}
+              <path
+                d="M 10 90 A 90 90 0 0 1 190 90"
+                fill="none"
+                stroke={
+                  predictionResult.risk_percentage < 33
+                    ? "#4caf50" // Green for low risk
+                    : predictionResult.risk_percentage < 66
+                    ? "#ff9800" // Orange for moderate risk
+                    : "#f44336" // Red for high risk
+                }
+                strokeWidth="10"
+                strokeDasharray={`${predictionResult.risk_percentage * 2.7} ${270 -
+                  predictionResult.risk_percentage * 2.7}`}
+                strokeDashoffset="0"
+              />
+              {/* Risk Level Pointer */}
+              <line
+                x1="100"
+                y1="90"
+                x2={100 + 80 * Math.cos(((predictionResult.risk_percentage - 50) * Math.PI) / 50)}
+                y2={90 - 80 * Math.sin(((predictionResult.risk_percentage - 50) * Math.PI) / 50)}
+                stroke="black"
+                strokeWidth="3"
+              />
+              {/* Labels */}
+              <text x="10" y="95" fill="#4caf50" fontSize="12" fontWeight="bold">
+                Less Risk
+              </text>
+              <text x="160" y="95" fill="#f44336" fontSize="12" fontWeight="bold">
+                High Risk
+              </text>
+              <text x="90" y="30" fill="#ff9800" fontSize="12" fontWeight="bold">
+                Moderate
+              </text>
+            </svg>
           </Box>
-          <Typography variant="caption" color="textSecondary">
-            This indicates the potential risk level for this stock.
+          <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
+            The risk percentage is {predictionResult.risk_percentage}%. Lower risk indicates safer investments, while higher risk suggests greater volatility.
           </Typography>
         </Box>
       </Grid>

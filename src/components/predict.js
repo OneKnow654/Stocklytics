@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, Card, CardContent, Typography, Grid, Tooltip } from '@mui/material';
 import StockSuggestions from './StockSuggestions';
 
@@ -7,6 +8,8 @@ const StockPredictionForm = () => {
     const [selectedTerm, setSelectedTerm] = useState(null);
     const [predictionResult, setPredictionResult] = useState(null);
     const [error, setError] = useState('');
+
+    const navigate = useNavigate();
 
     const calculateDates = (term) => {
         const currentDate = new Date();
@@ -260,6 +263,19 @@ const StockPredictionForm = () => {
           </Typography>
         </Box>
       </Grid>
+      <Box sx={{ maxWidth: 600, mx: 'auto', mt: 5, p: 3, boxShadow: 3, borderRadius: 2, bgcolor: 'background.paper' }}>
+        {/* ...existing form code */}
+        
+        <Button
+            variant="outlined"
+            color="secondary"
+            fullWidth
+            sx={{ mt: 2 }}
+            onClick={() => navigate('/history')}
+        >
+            View Prediction History
+        </Button>
+    </Box>
     </Grid>
   </Card>
 )}

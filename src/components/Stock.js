@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Container, Typography, TextField, CircularProgress, Box, Grid, Button, MenuItem } from '@mui/material';
+import {
+  Container,
+  Typography,
+  TextField,
+  CircularProgress,
+  Box,
+  Grid,
+  Button,
+  MenuItem,
+} from '@mui/material';
 import { Autocomplete } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
@@ -48,7 +57,7 @@ const StockData = () => {
         setHistoricalData(chartPrices);
         setChartLabels(chartLabels);
       } else {
-        throw new Error("Price data not available");
+        throw new Error('Price data not available');
       }
     } catch (error) {
       console.error('Error fetching stock data:', error);
@@ -60,39 +69,60 @@ const StockData = () => {
 
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:4000/stocks');
-  
+
     socket.onmessage = (event) => {
       const newData = JSON.parse(event.data);
-      if (newData.symbol === symbol) {  // Ensure you're updating the right stock chart
+      // Update only if the incoming data symbol matches our current symbol
+      if (newData.symbol === symbol) {
         updateChartData(newData);
       }
     };
-  
+
     return () => {
       socket.close();
     };
-  }, [symbol]);  // Dependency on 'symbol' ensures it updates the right stock data
-  
+  }, [symbol]);
 
+  // Safely update chart data if chartData is already initialized
   const updateChartData = (newData) => {
     const newPrice = newData.price;
     const newTimestamp = new Date(newData.timestamp).toLocaleTimeString(); // Format as time
-  
+
     setHistoricalData((prev) => [...prev, newPrice]);
     setChartLabels((prev) => [...prev, newTimestamp]);
-  
-    setChartData((prevData) => ({
-      ...prevData,
-      labels: [...prevData.labels, newTimestamp],
-      datasets: [
-        {
-          ...prevData.datasets[0],
-          data: [...prevData.datasets[0].data, newPrice],
-        },
-      ],
-    }));
+
+    setChartData((prevData) => {
+      // If prevData is null, create a fresh dataset instead of spreading
+      if (!prevData) {
+        return {
+          labels: [newTimestamp],
+          datasets: [
+            {
+              label: `${symbol} Stock Price`,
+              data: [newPrice],
+              fill: false,
+              backgroundColor: 'rgba(75, 192, 192, 0.6)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              tension: 0.1,
+            },
+          ],
+        };
+      }
+
+      // Otherwise, append to existing datasets
+      return {
+        ...prevData,
+        labels: [...prevData.labels, newTimestamp],
+        datasets: [
+          {
+            ...prevData.datasets[0],
+            data: [...prevData.datasets[0].data, newPrice],
+          },
+        ],
+      };
+    });
   };
-  
+
   const fetchSuggestions = async (inputValue) => {
     if (!inputValue) {
       setSuggestions([]);
@@ -144,20 +174,22 @@ const StockData = () => {
       endDate: now.toISOString().split('T')[0],
     };
   };
-  
+
   const fetchHistoricalData = async () => {
     const { startDate, endDate } = getHistoricalDates(historicalRange);
-  
+
     try {
-      const response = await axios.get(`http://localhost:4000/historical/${symbol}?startDate=${startDate}&endDate=${endDate}`);
+      const response = await axios.get(
+        `http://localhost:4000/historical/${symbol}?startDate=${startDate}&endDate=${endDate}`
+      );
       const historicalData = response.data.data;
-  
-      const historicalPrices = historicalData.map(item => item.close); // Assuming 'close' prices
-      const historicalLabels = historicalData.map(item => item.date);  // Assuming 'date' format
-  
+
+      const historicalPrices = historicalData.map((item) => item.close); // Assuming 'close' prices
+      const historicalLabels = historicalData.map((item) => item.date); // Assuming 'date' format
+
       setHistoricalData(historicalPrices);
       setChartLabels(historicalLabels);
-  
+
       setChartData({
         labels: historicalLabels,
         datasets: [
@@ -213,28 +245,35 @@ const StockData = () => {
     const selectedIndicator = e.target.value;
     setIndicator(selectedIndicator);
 
+    // If 'None', we won't add another indicator dataset
     if (selectedIndicator !== 'None') {
       const calculatedData = applyIndicator(historicalData, selectedIndicator);
       if (calculatedData) {
-        setChartData((prevData) => ({
-          ...prevData,
-          datasets: [
-            ...prevData.datasets,
-            {
-              label: `${symbol} ${selectedIndicator}`,
-              data: calculatedData,
-              fill: false,
-              backgroundColor: 'rgba(255, 99, 132, 0.6)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              tension: 0.1,
-            },
-          ],
-        }));
+        setChartData((prevData) => {
+          // If no chartData yet, do nothing
+          if (!prevData) return null;
+
+          return {
+            ...prevData,
+            datasets: [
+              ...prevData.datasets,
+              {
+                label: `${symbol} ${selectedIndicator}`,
+                data: calculatedData,
+                fill: false,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                tension: 0.1,
+              },
+            ],
+          };
+        });
       }
     }
   };
 
   const formatMarketCap = (marketCap) => {
+    if (!marketCap) return '—';
     if (marketCap >= 1e12) return `${(marketCap / 1e12).toFixed(2)} Trillion ₹`;
     if (marketCap >= 1e9) return `${(marketCap / 1e9).toFixed(2)} Billion ₹`;
     if (marketCap >= 1e7) return `${(marketCap / 1e7).toFixed(2)} Crore ₹`;
@@ -246,15 +285,19 @@ const StockData = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Stock Market Data
       </Typography>
-  
+
       <Grid container justifyContent="space-between" alignItems="center">
         <Grid item xs={12} sm={8}>
           {/* Autocomplete for stock symbol search */}
           <Autocomplete
             freeSolo
+            value={symbol} // Ensure this is a controlled component
             options={suggestions}
             getOptionLabel={(option) => option}
-            onInputChange={(e, newInputValue) => fetchSuggestions(newInputValue)}
+            onInputChange={(e, newInputValue) => {
+              setSymbol(newInputValue); // Keep the text field in sync with state
+              fetchSuggestions(newInputValue);
+            }}
             onChange={handleSymbolChange}
             renderInput={(params) => (
               <TextField
@@ -266,7 +309,9 @@ const StockData = () => {
                   ...params.InputProps,
                   endAdornment: (
                     <>
-                      {fetchingSuggestions ? <CircularProgress color="inherit" size={20} /> : null}
+                      {fetchingSuggestions ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
                       {params.InputProps.endAdornment}
                     </>
                   ),
@@ -275,7 +320,7 @@ const StockData = () => {
             )}
           />
         </Grid>
-  
+
         {/* Dropdown for selecting technical indicator at top-right */}
         <Grid item xs={12} sm={4} style={{ textAlign: 'right', marginTop: '16px' }}>
           <TextField
@@ -283,7 +328,7 @@ const StockData = () => {
             label="Select Technical Indicator"
             value={indicator}
             onChange={handleIndicatorChange}
-            sx={{ width: '100%', maxWidth: '250px',marginBottom :"17px" }}  // Ensures the dropdown fits at top-right
+            sx={{ width: '100%', maxWidth: '250px', marginBottom: '17px' }}
           >
             <MenuItem value="None">None</MenuItem>
             <MenuItem value="MA">Moving Average (MA)</MenuItem>
@@ -291,7 +336,7 @@ const StockData = () => {
           </TextField>
         </Grid>
       </Grid>
-  
+
       {/* Dropdown for selecting historical data range */}
       <Box sx={{ marginTop: '20px' }}>
         <TextField
@@ -307,16 +352,17 @@ const StockData = () => {
           <MenuItem value="1y">1 Year</MenuItem>
         </TextField>
       </Box>
-            
-         {/* Button for fetching historical data */}
-         <Button
-                  onClick={fetchHistoricalData}
-                  variant="contained"
-                  color="primary"
-                  sx={{ marginTop: '20px' }}
-                >
-                  View Historical Data
-                </Button>
+
+      {/* Button for fetching historical data */}
+      <Button
+        onClick={fetchHistoricalData}
+        variant="contained"
+        color="primary"
+        sx={{ marginTop: '20px' }}
+      >
+        View Historical Data
+      </Button>
+
       {loading ? (
         <CircularProgress style={{ marginTop: '20px' }} />
       ) : (
@@ -343,11 +389,11 @@ const StockData = () => {
                 />
               </div>
             )}
-  
+
             {stockInfo && (
               <Box sx={{ marginTop: '20px' }}>
                 <Typography variant="h6">Stock Information:</Typography>
-  
+
                 <Grid container spacing={2} sx={{ marginTop: '20px' }}>
                   <Grid item xs={6} md={4}>
                     <Box
@@ -360,10 +406,12 @@ const StockData = () => {
                       <Typography variant="body1" color="textSecondary">
                         Current Price
                       </Typography>
-                      <Typography variant="h6">₹{stockInfo.price.regularMarketPrice}</Typography>
+                      <Typography variant="h6">
+                        ₹{stockInfo.price?.regularMarketPrice ?? '—'}
+                      </Typography>
                     </Box>
                   </Grid>
-  
+
                   <Grid item xs={6} md={4}>
                     <Box
                       sx={{
@@ -375,10 +423,12 @@ const StockData = () => {
                       <Typography variant="body1" color="textSecondary">
                         Open Price
                       </Typography>
-                      <Typography variant="h6">₹{stockInfo.price.regularMarketOpen}</Typography>
+                      <Typography variant="h6">
+                        ₹{stockInfo.price?.regularMarketOpen ?? '—'}
+                      </Typography>
                     </Box>
                   </Grid>
-  
+
                   <Grid item xs={6} md={4}>
                     <Box
                       sx={{
@@ -390,10 +440,12 @@ const StockData = () => {
                       <Typography variant="body1" color="textSecondary">
                         Day High
                       </Typography>
-                      <Typography variant="h6">₹{stockInfo.price.regularMarketDayHigh}</Typography>
+                      <Typography variant="h6">
+                        ₹{stockInfo.price?.regularMarketDayHigh ?? '—'}
+                      </Typography>
                     </Box>
                   </Grid>
-  
+
                   <Grid item xs={6} md={4}>
                     <Box
                       sx={{
@@ -405,10 +457,12 @@ const StockData = () => {
                       <Typography variant="body1" color="textSecondary">
                         Day Low
                       </Typography>
-                      <Typography variant="h6">₹{stockInfo.price.regularMarketDayLow}</Typography>
+                      <Typography variant="h6">
+                        ₹{stockInfo.price?.regularMarketDayLow ?? '—'}
+                      </Typography>
                     </Box>
                   </Grid>
-  
+
                   <Grid item xs={6} md={4}>
                     <Box
                       sx={{
@@ -420,12 +474,12 @@ const StockData = () => {
                       <Typography variant="body1" color="textSecondary">
                         Market Cap
                       </Typography>
-                      <Typography variant="h6">{formatMarketCap(stockInfo.price.marketCap)}</Typography>
+                      <Typography variant="h6">
+                        {formatMarketCap(stockInfo.price?.marketCap)}
+                      </Typography>
                     </Box>
                   </Grid>
                 </Grid>
-  
-             
               </Box>
             )}
           </div>
@@ -433,7 +487,6 @@ const StockData = () => {
       )}
     </Container>
   );
-  
 };
 
 export default StockData;

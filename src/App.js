@@ -4,6 +4,7 @@ import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/materi
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
+import PredictionHistory from './components/PredictionHistory';
 
 function App() {
   return (
@@ -35,7 +36,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            
+            <Route path="/history" element={<PredictionHistory />}/>
             <Route path="/dashboard/*" element={<Dashboard />} />
           </Routes>
         </Container>

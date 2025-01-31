@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import {
   Container,
@@ -9,13 +9,12 @@ import {
   Grid,
   Button,
   MenuItem,
+  Card,
+  CardContent,
+  CardHeader,
 } from '@mui/material';
 import { Autocomplete } from '@mui/material';
-import { Line } from 'react-chartjs-2';
-import { Chart, registerables } from 'chart.js';
-import 'chartjs-adapter-date-fns';
-
-Chart.register(...registerables);
+import ReactECharts from 'echarts-for-react';
 
 const StockData = () => {
   const [symbol, setSymbol] = useState('');
@@ -23,13 +22,13 @@ const StockData = () => {
   const [stockInfo, setStockInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
-  const [chartData, setChartData] = useState(null);
-  const [historicalData, setHistoricalData] = useState([]);
   const [chartLabels, setChartLabels] = useState([]);
+  const [historicalData, setHistoricalData] = useState([]);
   const [historicalRange, setHistoricalRange] = useState('1d');
-  const [indicator, setIndicator] = useState('None'); // State to store selected indicator
-  const chartRef = useRef(null);
 
+  // ======================
+  // 1. Fetch Basic Stock Data
+  // ======================
   const fetchStockData = async (selectedSymbol) => {
     setLoading(true);
     try {
@@ -37,25 +36,7 @@ const StockData = () => {
       const data = response.data;
 
       if (data.price) {
-        const chartLabels = [new Date(data.price.regularMarketTime).toLocaleString()];
-        const chartPrices = [data.price.regularMarketPrice];
-
-        setChartData({
-          labels: chartLabels,
-          datasets: [
-            {
-              label: `${selectedSymbol} Stock Price`,
-              data: chartPrices,
-              fill: false,
-              backgroundColor: 'rgba(75, 192, 192, 0.6)',
-              borderColor: 'rgba(75, 192, 192, 1)',
-              tension: 0.1,
-            },
-          ],
-        });
         setStockInfo(data);
-        setHistoricalData(chartPrices);
-        setChartLabels(chartLabels);
       } else {
         throw new Error('Price data not available');
       }
@@ -67,62 +48,9 @@ const StockData = () => {
     }
   };
 
-  useEffect(() => {
-    const socket = new WebSocket('ws://localhost:4000/stocks');
-
-    socket.onmessage = (event) => {
-      const newData = JSON.parse(event.data);
-      // Update only if the incoming data symbol matches our current symbol
-      if (newData.symbol === symbol) {
-        updateChartData(newData);
-      }
-    };
-
-    return () => {
-      socket.close();
-    };
-  }, [symbol]);
-
-  // Safely update chart data if chartData is already initialized
-  const updateChartData = (newData) => {
-    const newPrice = newData.price;
-    const newTimestamp = new Date(newData.timestamp).toLocaleTimeString(); // Format as time
-
-    setHistoricalData((prev) => [...prev, newPrice]);
-    setChartLabels((prev) => [...prev, newTimestamp]);
-
-    setChartData((prevData) => {
-      // If prevData is null, create a fresh dataset instead of spreading
-      if (!prevData) {
-        return {
-          labels: [newTimestamp],
-          datasets: [
-            {
-              label: `${symbol} Stock Price`,
-              data: [newPrice],
-              fill: false,
-              backgroundColor: 'rgba(75, 192, 192, 0.6)',
-              borderColor: 'rgba(75, 192, 192, 1)',
-              tension: 0.1,
-            },
-          ],
-        };
-      }
-
-      // Otherwise, append to existing datasets
-      return {
-        ...prevData,
-        labels: [...prevData.labels, newTimestamp],
-        datasets: [
-          {
-            ...prevData.datasets[0],
-            data: [...prevData.datasets[0].data, newPrice],
-          },
-        ],
-      };
-    });
-  };
-
+  // ======================
+  // 2. Fetch Symbol Suggestions
+  // ======================
   const fetchSuggestions = async (inputValue) => {
     if (!inputValue) {
       setSuggestions([]);
@@ -139,145 +67,133 @@ const StockData = () => {
     }
   };
 
-  const handleSymbolChange = (event, value) => {
-    if (value) {
-      setSymbol(value);
-      fetchStockData(value);
-    }
-  };
+  // ======================
+  // 3. Fetch Historical Data
+  // ======================
+  const fetchHistoricalData = async () => {
+    if (!symbol) return;
 
-  const getHistoricalDates = (range) => {
+    // Compute the start date based on historicalRange
     const now = new Date();
-    let startDate;
-    switch (range) {
+    let startDate = new Date(now);
+    switch (historicalRange) {
       case '1d':
-        startDate = new Date(now);
         startDate.setDate(now.getDate() - 1);
         break;
       case '1w':
-        startDate = new Date(now);
         startDate.setDate(now.getDate() - 7);
         break;
       case '1m':
-        startDate = new Date(now);
         startDate.setMonth(now.getMonth() - 1);
         break;
       case '1y':
-        startDate = new Date(now);
         startDate.setFullYear(now.getFullYear() - 1);
         break;
       default:
-        startDate = new Date(now);
+        // Fallback to 1 day
+        startDate.setDate(now.getDate() - 1);
     }
-    return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: now.toISOString().split('T')[0],
-    };
-  };
-
-  const fetchHistoricalData = async () => {
-    const { startDate, endDate } = getHistoricalDates(historicalRange);
 
     try {
       const response = await axios.get(
-        `http://localhost:4000/historical/${symbol}?startDate=${startDate}&endDate=${endDate}`
+        `http://localhost:4000/historical/${symbol}?startDate=${startDate.toISOString().split('T')[0]}`
       );
-      const historicalData = response.data.data;
+      const historicalData = response.data.data; // Make sure your API returns { data: [...] }
 
-      const historicalPrices = historicalData.map((item) => item.close); // Assuming 'close' prices
-      const historicalLabels = historicalData.map((item) => item.date); // Assuming 'date' format
+      const prices = historicalData.map((item) => item.close);
+      const labels = historicalData.map((item) => item.date);
 
-      setHistoricalData(historicalPrices);
-      setChartLabels(historicalLabels);
-
-      setChartData({
-        labels: historicalLabels,
-        datasets: [
-          {
-            label: `${symbol} Historical Stock Prices`,
-            data: historicalPrices,
-            fill: false,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            tension: 0.1,
-          },
-        ],
-      });
+      setHistoricalData(prices);
+      setChartLabels(labels);
     } catch (error) {
       console.error('Error fetching historical data:', error);
     }
   };
 
-  const applyIndicator = (data, indicatorType) => {
-    switch (indicatorType) {
-      case 'MA':
-        return calculateMovingAverage(data);
-      case 'EMA':
-        return calculateExponentialMovingAverage(data);
-      default:
-        return null;
-    }
+  // ======================
+  // 4. Chart Configuration
+  // ======================
+  const getChartOptions = () => {
+    return {
+      title: {
+        text: `${symbol} Stock Price`,
+        left: 'center',
+      },
+      tooltip: {
+        trigger: 'axis',
+      },
+      // Allow zoom and pan
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100,
+        },
+        {
+          type: 'slider',
+          start: 0,
+          end: 100,
+        },
+      ],
+      // Toolbox with various features (save as image, restore, data view)
+      toolbox: {
+        feature: {
+          saveAsImage: { show: true },
+          restore: { show: true },
+          dataView: { show: true, readOnly: false },
+        },
+      },
+      xAxis: {
+        type: 'category',
+        data: chartLabels,
+        boundaryGap: false,
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: {
+          formatter: '₹{value}',
+        },
+      },
+      // Enable animations for a smoother load
+      animation: true,
+      animationEasing: 'cubicOut',
+      animationDuration: 1000,
+      series: [
+        {
+          name: 'Stock Price',
+          type: 'line',
+          data: historicalData,
+          smooth: true,
+          // Gradient fill under the line
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(76, 175, 80, 0.7)' }, // top color
+                { offset: 1, color: 'rgba(76, 175, 80, 0)' },  // bottom color
+              ],
+            },
+          },
+          lineStyle: {
+            color: '#4caf50',
+          },
+        },
+      ],
+    };
   };
 
-  // Calculate Moving Average (MA)
-  const calculateMovingAverage = (data, period = 5) => {
-    let result = [];
-    for (let i = 0; i < data.length; i++) {
-      const window = data.slice(Math.max(0, i - period + 1), i + 1);
-      const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
-      result.push(avg);
+  // ======================
+  // 5. Handlers
+  // ======================
+  const handleSymbolChange = (event, value) => {
+    if (value) {
+      setSymbol(value);
+      fetchStockData(value);
     }
-    return result;
-  };
-
-  // Calculate Exponential Moving Average (EMA)
-  const calculateExponentialMovingAverage = (data, period = 5) => {
-    let ema = [];
-    const k = 2 / (period + 1);
-    ema[0] = data[0]; // Start EMA at the first data point
-    for (let i = 1; i < data.length; i++) {
-      ema[i] = data[i] * k + ema[i - 1] * (1 - k);
-    }
-    return ema;
-  };
-
-  const handleIndicatorChange = (e) => {
-    const selectedIndicator = e.target.value;
-    setIndicator(selectedIndicator);
-
-    // If 'None', we won't add another indicator dataset
-    if (selectedIndicator !== 'None') {
-      const calculatedData = applyIndicator(historicalData, selectedIndicator);
-      if (calculatedData) {
-        setChartData((prevData) => {
-          // If no chartData yet, do nothing
-          if (!prevData) return null;
-
-          return {
-            ...prevData,
-            datasets: [
-              ...prevData.datasets,
-              {
-                label: `${symbol} ${selectedIndicator}`,
-                data: calculatedData,
-                fill: false,
-                backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                tension: 0.1,
-              },
-            ],
-          };
-        });
-      }
-    }
-  };
-
-  const formatMarketCap = (marketCap) => {
-    if (!marketCap) return '—';
-    if (marketCap >= 1e12) return `${(marketCap / 1e12).toFixed(2)} Trillion ₹`;
-    if (marketCap >= 1e9) return `${(marketCap / 1e9).toFixed(2)} Billion ₹`;
-    if (marketCap >= 1e7) return `${(marketCap / 1e7).toFixed(2)} Crore ₹`;
-    return `${marketCap} ₹`;
   };
 
   return (
@@ -286,9 +202,9 @@ const StockData = () => {
         Stock Market Data
       </Typography>
 
-      <Grid container justifyContent="space-between" alignItems="center">
+      <Grid container spacing={2} alignItems="center">
+        {/* Symbol Autocomplete */}
         <Grid item xs={12} sm={8}>
-          {/* Autocomplete for stock symbol search */}
           <Autocomplete
             freeSolo
             value={symbol} // Ensure this is a controlled component
@@ -321,169 +237,85 @@ const StockData = () => {
           />
         </Grid>
 
-        {/* Dropdown for selecting technical indicator at top-right */}
-        <Grid item xs={12} sm={4} style={{ textAlign: 'right', marginTop: '16px' }}>
+        {/* Historical Range Selector */}
+        <Grid item xs={12} sm={4}>
           <TextField
             select
-            label="Select Technical Indicator"
-            value={indicator}
-            onChange={handleIndicatorChange}
-            sx={{ width: '100%', maxWidth: '250px', marginBottom: '17px' }}
+            label="Historical Data Range"
+            value={historicalRange}
+            onChange={(e) => setHistoricalRange(e.target.value)}
+            fullWidth
           >
-            <MenuItem value="None">None</MenuItem>
-            <MenuItem value="MA">Moving Average (MA)</MenuItem>
-            <MenuItem value="EMA">Exponential Moving Average (EMA)</MenuItem>
+            <MenuItem value="1d">1 Day</MenuItem>
+            <MenuItem value="1w">1 Week</MenuItem>
+            <MenuItem value="1m">1 Month</MenuItem>
+            <MenuItem value="1y">1 Year</MenuItem>
           </TextField>
         </Grid>
       </Grid>
 
-      {/* Dropdown for selecting historical data range */}
-      <Box sx={{ marginTop: '20px' }}>
-        <TextField
-          select
-          label="Select Historical Data Range"
-          value={historicalRange}
-          onChange={(e) => setHistoricalRange(e.target.value)}
-          fullWidth
-        >
-          <MenuItem value="1d">1 Day</MenuItem>
-          <MenuItem value="1w">1 Week</MenuItem>
-          <MenuItem value="1m">1 Month</MenuItem>
-          <MenuItem value="1y">1 Year</MenuItem>
-        </TextField>
-      </Box>
-
-      {/* Button for fetching historical data */}
+      {/* Fetch Historical Data Button */}
       <Button
         onClick={fetchHistoricalData}
         variant="contained"
         color="primary"
-        sx={{ marginTop: '20px' }}
+        sx={{ marginTop: 2 }}
+        disabled={!symbol}
       >
-        View Historical Data
+        {loading ? 'Loading...' : 'Fetch Historical Data'}
       </Button>
 
-      {loading ? (
-        <CircularProgress style={{ marginTop: '20px' }} />
-      ) : (
-        stockInfo && (
-          <div style={{ marginTop: '20px' }}>
-            {chartData && (
-              <div style={{ marginTop: '40px' }}>
-                <Typography variant="h6">Stock Price Chart:</Typography>
-                <Line
-                  data={chartData}
-                  options={{
-                    scales: {
-                      x: {
-                        type: 'time',
-                        time: {
-                          unit: 'minute',
-                        },
-                      },
-                      y: {
-                        beginAtZero: false,
-                      },
-                    },
-                  }}
-                />
-              </div>
-            )}
+      {/* Chart Section */}
+      {chartLabels.length > 0 && historicalData.length > 0 && (
+        <Box sx={{ marginTop: 4 }}>
+          <ReactECharts option={getChartOptions()} style={{ height: 400, width: '100%' }} />
+        </Box>
+      )}
 
-            {stockInfo && (
-              <Box sx={{ marginTop: '20px' }}>
-                <Typography variant="h6">Stock Information:</Typography>
+      {/* Stock Information in Cards */}
+      {stockInfo && (
+        <Box sx={{ marginTop: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Stock Information:
+          </Typography>
+          <Grid container spacing={2}>
+            {/* Current Price Card */}
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardHeader title="Current Price" />
+                <CardContent>
+                  <Typography variant="h5">
+                    ₹{stockInfo.price.regularMarketPrice?.toLocaleString()}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
 
-                <Grid container spacing={2} sx={{ marginTop: '20px' }}>
-                  <Grid item xs={6} md={4}>
-                    <Box
-                      sx={{
-                        padding: 2,
-                        backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      <Typography variant="body1" color="textSecondary">
-                        Current Price
-                      </Typography>
-                      <Typography variant="h6">
-                        ₹{stockInfo.price?.regularMarketPrice ?? '—'}
-                      </Typography>
-                    </Box>
-                  </Grid>
+            {/* Open Price Card */}
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardHeader title="Open Price" />
+                <CardContent>
+                  <Typography variant="h5">
+                    ₹{stockInfo.price.regularMarketOpen?.toLocaleString()}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
 
-                  <Grid item xs={6} md={4}>
-                    <Box
-                      sx={{
-                        padding: 2,
-                        backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      <Typography variant="body1" color="textSecondary">
-                        Open Price
-                      </Typography>
-                      <Typography variant="h6">
-                        ₹{stockInfo.price?.regularMarketOpen ?? '—'}
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={6} md={4}>
-                    <Box
-                      sx={{
-                        padding: 2,
-                        backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      <Typography variant="body1" color="textSecondary">
-                        Day High
-                      </Typography>
-                      <Typography variant="h6">
-                        ₹{stockInfo.price?.regularMarketDayHigh ?? '—'}
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={6} md={4}>
-                    <Box
-                      sx={{
-                        padding: 2,
-                        backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      <Typography variant="body1" color="textSecondary">
-                        Day Low
-                      </Typography>
-                      <Typography variant="h6">
-                        ₹{stockInfo.price?.regularMarketDayLow ?? '—'}
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={6} md={4}>
-                    <Box
-                      sx={{
-                        padding: 2,
-                        backgroundImage: 'linear-gradient(135deg, #69FF97 10%, #00E4FF 100%)',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      <Typography variant="body1" color="textSecondary">
-                        Market Cap
-                      </Typography>
-                      <Typography variant="h6">
-                        {formatMarketCap(stockInfo.price?.marketCap)}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Box>
-            )}
-          </div>
-        )
+            {/* Market Cap Card */}
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardHeader title="Market Cap" />
+                <CardContent>
+                  <Typography variant="h5">
+                    ₹{stockInfo.price.marketCap?.toLocaleString()}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
       )}
     </Container>
   );

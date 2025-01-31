@@ -4,6 +4,7 @@ import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/materi
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
+import Homepage from './components/Homepage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login status
@@ -55,7 +56,7 @@ function App() {
       <Box sx={{ paddingTop: '80px' }}>
         <Container>
           <Routes>
-            <Route path="/" element={<Typography variant="h4">Welcome to My App</Typography>} />
+            <Route path="/" element={< input type='e' />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard/*" element={<Dashboard />} />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, Link } from 'react-router-dom';
 import { Container, IconButton, Box, Typography, Tooltip, AppBar, Toolbar, Avatar, Snackbar, Alert } from '@mui/material';
-import StockData from './Stock.js.bak';
+import StockData from './Stock.js';
 import AboutUs from './Aboutus';
 import ContactUs from './ContactUs';
 import MenuIcon from '@mui/icons-material/Menu';

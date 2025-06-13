@@ -1,0 +1,7 @@
+<div style="margin-bottom:5px">
+                <strong>Date/Time:</strong> ${hd.date}<br/>
+                Open: ${hd.open.toFixed(2)}<br/>
+                High: ${hd.high.toFixed(2)}<br/>
+                Low: ${hd.low.toFixed(2)}<br/>
+                Close: ${hd.close.toFixed(2)}
+              </div>
